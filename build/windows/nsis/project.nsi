@@ -36,7 +36,7 @@ Unicode true
 !define INFO_COMPANYNAME    "MindSpace"
 !define INFO_PRODUCTNAME    "IconStore"
 !define INFO_PRODUCTVERSION "1.0.0"
-!define INFO_COPYRIGHT      "© 2026, MindSpace"
+!define INFO_COPYRIGHT      "(c) 2026, MindSpace"
 !include "wails_tools.nsh"
 
 # The version information for this two must consist of 4 parts
@@ -56,8 +56,6 @@ ManifestDPIAware true
 !include "MUI.nsh"
 !include "nsDialogs.nsh"
 !include "LogicLib.nsh"
-!insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
-!insertmacro MUI_FUNCTION_DESCRIPTION_END
 
 !define MUI_ICON "..\icon.ico"
 !define MUI_UNICON "..\icon.ico"
