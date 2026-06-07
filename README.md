@@ -1,12 +1,29 @@
-# IconStore
+<p align="center">
+  <img src="build/appicon.png" alt="IconStore" width="128" height="128">
+</p>
 
-English | [中文](README_CN.md)
+<h1 align="center">IconStore</h1>
 
-A cross-platform SVG icon search, browse, and download tool built with [Wails v3](https://v3.wails.io/) (Go + Vue 3). It comes with a built-in SQLite database for full-text icon search and includes an MCP (Model Context Protocol) server for AI assistant integration.
+<p align="center">English | <a href="README_CN.md">中文</a></p>
+
+<p align="center">
+A cross-platform SVG icon search, browse, and download tool built with <a href="https://v3.wails.io/">Wails v3</a> (Go + Vue 3).<br>
+Built-in SQLite database for full-text icon search and MCP server for AI assistant integration.
+</p>
+
+## Screenshots
+
+<p align="center">
+  <img src="screenshot/001.png" width="45%">&nbsp;&nbsp;
+  <img src="screenshot/002.png" width="45%">
+</p>
+<p align="center">
+  <img src="screenshot/003.png" width="45%">
+</p>
 
 ## Features
 
-- **Icon Search** — Full-text search powered by SQLite FTS5, supporting keyword matching across icon name, category, tags, and package
+- **Icon Search** — Full-text search powered by SQLite FTS5 across 60,000+ built-in icons
 - **Browse by Package/Category** — Sidebar navigation to browse icons organized by packages and sub-categories
 - **Icon Preview** — View icons at multiple sizes (16/24/32/48px) with real-time color preview
 - **Export** — Download icons as SVG or PNG with custom size and color; native system save dialog

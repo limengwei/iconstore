@@ -1,12 +1,29 @@
-# IconStore
+<p align="center">
+  <img src="build/appicon.png" alt="IconStore" width="128" height="128">
+</p>
 
-[English](README.md) | 中文
+<h1 align="center">IconStore</h1>
 
-一个跨平台的 SVG 图标搜索、浏览和下载工具，基于 [Wails v3](https://v3.wails.io/)（Go + Vue 3）构建。内置 SQLite 数据库支持全文搜索，并集成 MCP（Model Context Protocol）服务器，可接入 AI 助手使用。
+<p align="center"><a href="README.md">English</a> | 中文</p>
+
+<p align="center">
+一个跨平台的 SVG 图标搜索、浏览和下载工具，基于 <a href="https://v3.wails.io/">Wails v3</a>（Go + Vue 3）构建。<br>
+内置 SQLite 数据库支持全文搜索，集成 MCP 服务器可接入 AI 助手使用。
+</p>
+
+## 截图
+
+<p align="center">
+  <img src="screenshot/001.png" width="45%">&nbsp;&nbsp;
+  <img src="screenshot/002.png" width="45%">
+</p>
+<p align="center">
+  <img src="screenshot/003.png" width="45%">
+</p>
 
 ## 功能特性
 
-- **图标搜索** — 基于 SQLite FTS5 全文检索，支持按图标名称、分类、标签、包名进行关键词搜索
+- **图标搜索** — 内置 60,000+ 图标，基于 SQLite FTS5 全文检索
 - **分类浏览** — 侧边栏按包名/分类层级浏览图标库
 - **多尺寸预览** — 在 16/24/32/48px 多种尺寸下实时预览图标，支持自定义颜色
 - **导出下载** — 支持 SVG/PNG 格式导出，可自定义尺寸和颜色，调用系统原生保存对话框
