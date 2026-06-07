@@ -1,5 +1,7 @@
 # IconStore
 
+English | [中文](README_CN.md)
+
 A cross-platform SVG icon search, browse, and download tool built with [Wails v3](https://v3.wails.io/) (Go + Vue 3). It comes with a built-in SQLite database for full-text icon search and includes an MCP (Model Context Protocol) server for AI assistant integration.
 
 ## Features
