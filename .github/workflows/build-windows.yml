@@ -1,0 +1,92 @@
+name: Build Windows Installer
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Wails CLI
+        run: go install github.com/wailsapp/wails/v3/cmd/wails3@latest
+
+      - name: Install NSIS
+        run: choco install nsis -y
+
+      - name: Build Frontend
+        working-directory: frontend
+        run: npm install && npm run build
+
+      - name: Generate Bindings
+        run: wails3 generate bindings -f "-tags production" -clean=true
+
+      - name: Generate Windows Resources
+        working-directory: build
+        run: wails3 generate syso -arch amd64 -icon windows/icon.ico -manifest windows/wails.exe.manifest -info windows/info.json -out ../wails_windows_amd64.syso
+
+      - name: Build Executable
+        run: |
+          go mod tidy
+          go build -tags production -trimpath -buildvcs=false -ldflags="-w -s -H windowsgui" -o "bin/iconstore.exe"
+        env:
+          GOOS: windows
+          GOARCH: amd64
+          CGO_ENABLED: '0'
+
+      - name: Generate WebView2 Bootstrapper
+        run: wails3 generate webview2bootstrapper -dir "build/windows/nsis"
+
+      - name: Create NSIS Installer
+        working-directory: build/windows/nsis
+        run: |
+          makensis `
+            -DARG_WAILS_AMD64_BINARY="$env:GITHUB_WORKSPACE\bin\iconstore.exe" `
+            -DARG_ICONSTORE_DB="$env:GITHUB_WORKSPACE\iconstore.db" `
+            project.nsi
+        shell: pwsh
+
+      - name: Rename Installer
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem "bin\*-installer.exe" | Select-Object -First 1
+          if ($installer) {
+            Copy-Item $installer.FullName "bin/IconStore-Setup-windows-amd64.exe"
+          }
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: IconStore-Windows-amd64
+          path: bin/IconStore-Setup-windows-amd64.exe
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: bin/IconStore-Setup-windows-amd64.exe
+          generate_release_notes: true
