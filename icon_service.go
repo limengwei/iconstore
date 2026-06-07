@@ -87,12 +87,45 @@ func findDBPath() string {
 	for _, c := range candidates {
 		if _, err := os.Stat(c); err == nil {
 			abs, _ := filepath.Abs(c)
-			return abs
+			// Check if writable; if not, copy to APPDATA
+			if f, err := os.OpenFile(abs, os.O_RDWR, 0); err == nil {
+				f.Close()
+				return abs
+			}
+			// Not writable, copy to user data dir
+			appData := os.Getenv("APPDATA")
+			if appData == "" {
+				return abs // fallback, will likely fail but no better option
+			}
+			userDB := filepath.Join(appData, "IconStore", "iconstore.db")
+			os.MkdirAll(filepath.Dir(userDB), 0755)
+			// Copy if not already there or source is newer
+			copyDBIfNeeded(abs, userDB)
+			return userDB
 		}
 	}
 	// Default: next to exe
 	abs, _ := filepath.Abs(filepath.Join(exeDir, "iconstore.db"))
 	return abs
+}
+
+// copyDBIfNeeded copies src to dst if dst doesn't exist or src is newer
+func copyDBIfNeeded(src, dst string) {
+	srcInfo, err := os.Stat(src)
+	if err != nil {
+		return
+	}
+	dstInfo, err := os.Stat(dst)
+	if err == nil && dstInfo.ModTime().Equal(srcInfo.ModTime()) && dstInfo.Size() == srcInfo.Size() {
+		return // already up to date
+	}
+	data, err := os.ReadFile(src)
+	if err != nil {
+		return
+	}
+	os.WriteFile(dst, data, 0644)
+	dst, _ = filepath.Abs(dst)
+	os.Chtimes(dst, srcInfo.ModTime(), srcInfo.ModTime())
 }
 
 // openDB opens/creates the SQLite database
