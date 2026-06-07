@@ -11,6 +11,7 @@ import (
 	"strconv"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
+	"github.com/wailsapp/wails/v3/pkg/events"
 )
 
 //go:embed all:frontend/dist
@@ -29,6 +30,10 @@ func main() {
 func runDesktopApp() {
 	iconSvc := NewIconService(nil)
 
+	singleInstance := &application.SingleInstanceOptions{
+		UniqueID: "com.mindspace.iconstore",
+	}
+
 	app := application.New(application.Options{
 		Name:        "IconStore",
 		Description: "SVG Icon Search & Download Tool",
@@ -40,14 +45,16 @@ func runDesktopApp() {
 			Handler: application.AssetFileServerFS(assets),
 		},
 		Mac: application.MacOptions{
-			ApplicationShouldTerminateAfterLastWindowClosed: true,
+			ApplicationShouldTerminateAfterLastWindowClosed: false,
 		},
+		SingleInstance: singleInstance,
 	})
 
 	// Start embedded MCP HTTP server in background
 	go startEmbeddedMCP(iconSvc)
 
-	app.Window.NewWithOptions(application.WebviewWindowOptions{
+	// Create main window
+	mainWindow := app.Window.NewWithOptions(application.WebviewWindowOptions{
 		Title:     "IconStore - Icon Search & Download",
 		Frameless: true,
 		Mac: application.MacWindow{
@@ -64,6 +71,38 @@ func runDesktopApp() {
 		MaximiseButtonState: application.ButtonHidden,
 		BackgroundColour:    application.NewRGB(15, 15, 17),
 		URL:                 "/",
+	})
+
+	// Set single instance callback after window is created
+	singleInstance.OnSecondInstanceLaunch = func(data application.SecondInstanceData) {
+		mainWindow.Show()
+		mainWindow.Focus()
+	}
+
+	// Hide window on close instead of quitting
+	mainWindow.RegisterHook(events.Common.WindowClosing, func(event *application.WindowEvent) {
+		mainWindow.Hide()
+		event.Cancel()
+	})
+
+	// Setup system tray
+	trayMenu := application.NewMenu()
+	trayMenu.Add("显示主窗口").OnClick(func(ctx *application.Context) {
+		mainWindow.Show()
+		mainWindow.Focus()
+	})
+	trayMenu.AddSeparator()
+	trayMenu.Add("退出").OnClick(func(ctx *application.Context) {
+		app.Quit()
+	})
+
+	tray := app.SystemTray.New()
+	tray.SetLabel("IconStore")
+	tray.SetTooltip("IconStore - Icon Search & Download")
+	tray.SetMenu(trayMenu)
+	tray.OnClick(func() {
+		mainWindow.Show()
+		mainWindow.Focus()
 	})
 
 	err := app.Run()
