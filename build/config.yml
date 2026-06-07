@@ -11,7 +11,7 @@ info:
   description: "SVG Icon Search & Download Tool with MCP Server"
   copyright: "(c) 2025, IconStore"
   comments: "Search, preview and download SVG icons"
-  version: "1.0.0"
+  version: "1.0.1"
   # cfBundleIconName: "appicon" # The macOS icon name in Assets.car icon bundles (optional)
   #                               # Should match the name of your .icon file without the extension
   #                               # If not set and Assets.car exists, defaults to "appicon"
