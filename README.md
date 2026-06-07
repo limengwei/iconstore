@@ -14,11 +14,13 @@ Built-in SQLite database for full-text icon search and MCP server for AI assista
 ## Screenshots
 
 <p align="center">
-  <img src="screenshot/001.png" width="45%">&nbsp;&nbsp;
-  <img src="screenshot/002.png" width="45%">
+  <img src="screenshot/001.png" width="80%">
 </p>
 <p align="center">
-  <img src="screenshot/003.png" width="45%">
+  <img src="screenshot/002.png" width="80%">
+</p>
+<p align="center">
+  <img src="screenshot/003.png" width="80%">
 </p>
 
 ## Features
