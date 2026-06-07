@@ -33,6 +33,10 @@ Unicode true
 ####
 ## Include the wails tools
 ####
+!define INFO_COMPANYNAME    "MindSpace"
+!define INFO_PRODUCTNAME    "IconStore"
+!define INFO_PRODUCTVERSION "1.0.0"
+!define INFO_COPYRIGHT      "© 2026, MindSpace"
 !include "wails_tools.nsh"
 
 # The version information for this two must consist of 4 parts
@@ -173,7 +177,7 @@ Section
        Pop $3
        ${If} $3 == ""
           WriteRegExpandStr SHELL_CONTEXT "Environment" "Path" "$0;$INSTDIR"
-          SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment"
+          SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=1000
        ${EndIf}
     ${EndIf}
     
@@ -190,7 +194,7 @@ Section "uninstall"
     Call un.RemoveFromPath
     Pop $0
     WriteRegExpandStr SHELL_CONTEXT "Environment" "Path" "$0"
-    SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment"
+    SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=1000
 
     RMDir /r "$AppData\${PRODUCT_EXECUTABLE}" # Remove the WebView2 DataPath
 
