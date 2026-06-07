@@ -13,7 +13,9 @@ permissions:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2022
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - name: Checkout
@@ -28,7 +30,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
@@ -63,12 +65,13 @@ jobs:
 
       - name: Create NSIS Installer
         working-directory: build/windows/nsis
+        shell: pwsh
         run: |
+          $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
           makensis `
             -DARG_WAILS_AMD64_BINARY="$env:GITHUB_WORKSPACE\bin\iconstore.exe" `
             -DARG_ICONSTORE_DB="$env:GITHUB_WORKSPACE\iconstore.db" `
             project.nsi
-        shell: pwsh
 
       - name: Rename Installer
         shell: pwsh
