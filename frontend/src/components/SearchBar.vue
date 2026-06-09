@@ -4,16 +4,23 @@ import { ref } from 'vue'
 const query = ref('')
 const emit = defineEmits(['search'])
 
+let debounceTimer = null
+
 function onInput() {
-  // Debounced search handled by parent
+  clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(() => {
+    emit('search', query.value)
+  }, 300)
 }
 
 function onSubmit() {
+  clearTimeout(debounceTimer)
   emit('search', query.value)
 }
 
 function onClear() {
   query.value = ''
+  clearTimeout(debounceTimer)
   emit('search', '')
 }
 </script>
@@ -28,7 +35,7 @@ function onClear() {
       <input
         type="text"
         v-model="query"
-        placeholder="Search icons by name, tag, or category..."
+        placeholder="搜索图标（支持中英文，如：首页、箭头、heart）..."
         class="search-input"
         @keyup.enter="onSubmit"
         @input="onInput"

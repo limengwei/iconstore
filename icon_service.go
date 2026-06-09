@@ -210,7 +210,88 @@ func (s *IconService) openDB() error {
 		return fmt.Errorf("create tables: %w", err)
 	}
 
+	// Populate Chinese translations in tags if needed
+	go s.populateChineseTranslations()
+
 	return nil
+}
+
+// populateChineseTranslations adds Chinese translations to the tags field
+// for all icons that don't have Chinese keywords yet.
+func (s *IconService) populateChineseTranslations() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	// Check if already populated
+	var count int
+	s.db.QueryRow(`SELECT COUNT(*) FROM icons WHERE tags NOT LIKE '%,%' OR tags = ''`).Scan(&count)
+	if count == 0 {
+		// Check if any icon has Chinese chars in tags
+		var hasChinese int
+		s.db.QueryRow(`SELECT COUNT(*) FROM icons WHERE tags GLOB '*[一-龥]*' LIMIT 1`).Scan(&hasChinese)
+		if hasChinese > 0 {
+			fmt.Println("[populateChineseTranslations] Chinese translations already present, skipping")
+			return
+		}
+	}
+
+	fmt.Println("[populateChineseTranslations] Populating Chinese translations...")
+
+	// Process in batches
+	batchSize := 500
+	offset := 0
+	total := 0
+
+	for {
+		rows, err := s.db.Query(`
+			SELECT rowid, name, tags FROM icons ORDER BY rowid LIMIT ? OFFSET ?
+		`, batchSize, offset)
+		if err != nil {
+			fmt.Printf("[populateChineseTranslations] Query error: %v\n", err)
+			break
+		}
+
+		type iconRow struct {
+			rowid int
+			name  string
+			tags  string
+		}
+		var batch []iconRow
+		for rows.Next() {
+			var r iconRow
+			rows.Scan(&r.rowid, &r.name, &r.tags)
+			batch = append(batch, r)
+		}
+		rows.Close()
+
+		if len(batch) == 0 {
+			break
+		}
+
+		// Update each icon
+		tx, _ := s.db.Begin()
+		for _, r := range batch {
+			zhKeywords := translateIconName(r.name)
+			if zhKeywords == "" {
+				continue
+			}
+
+			// Append Chinese keywords to existing tags
+			newTags := r.tags
+			if newTags != "" {
+				newTags += ", " + zhKeywords
+			} else {
+				newTags = zhKeywords
+			}
+
+			tx.Exec(`UPDATE icons SET tags = ? WHERE rowid = ?`, newTags, r.rowid)
+		}
+		tx.Commit()
+		total += len(batch)
+		offset += batchSize
+	}
+
+	fmt.Printf("[populateChineseTranslations] Done. Processed %d icons.\n", total)
 }
 
 // Search searches icons by keyword using FTS5
