@@ -12,7 +12,7 @@ const activeTab = ref('tools')
 const tools = [
   { name: 'search_icons', desc: 'Search for SVG icons by keyword. Returns matching icons with name, category, and tags.' },
   { name: 'get_icon', desc: "Get an icon's SVG content by its ID. Returns the raw SVG content." },
-  { name: 'export_icon', desc: 'Export an icon with custom color and format. Returns the exported file path.' }
+  { name: 'export_icon', desc: 'Export an icon with custom color and format. Returns the exported file path. Supports optional "directory" parameter to specify output directory.' }
 ]
 
 const mcpCommand = 'iconstore --mcp'

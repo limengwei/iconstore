@@ -39,9 +39,10 @@ type SearchResult struct {
 
 // ExportOptions for downloading icons
 type ExportOptions struct {
-	Format string `json:"format"` // "svg" or "png"
-	Size   int    `json:"size"`   // pixel size for PNG
-	Color  string `json:"color"`  // hex color, e.g. "#FF5722"
+	Format    string `json:"format"`    // "svg" or "png"
+	Size      int    `json:"size"`      // pixel size for PNG
+	Color     string `json:"color"`     // hex color, e.g. "#FF5722"
+	OutputDir string `json:"outputDir"` // output directory, empty means temp dir
 }
 
 // CategoryInfo represents a category with icon count
@@ -402,9 +403,14 @@ func (s *IconService) ExportIcon(id string, options ExportOptions) (string, erro
 		svgBytes = applySVGColor(svgBytes, options.Color)
 	}
 
-	// Create temp dir for exports
-	tmpDir := filepath.Join(os.TempDir(), "iconstore-exports")
-	os.MkdirAll(tmpDir, 0755)
+	// Determine output directory
+	var outDir string
+	if options.OutputDir != "" {
+		outDir = options.OutputDir
+	} else {
+		outDir = filepath.Join(os.TempDir(), "iconstore-exports")
+	}
+	os.MkdirAll(outDir, 0755)
 
 	// Get icon name for filename
 	s.mu.RLock()
@@ -416,7 +422,7 @@ func (s *IconService) ExportIcon(id string, options ExportOptions) (string, erro
 
 	switch options.Format {
 	case "svg", "":
-		outPath := filepath.Join(tmpDir, safeName+".svg")
+		outPath := filepath.Join(outDir, safeName+".svg")
 		err = os.WriteFile(outPath, svgBytes, 0644)
 		if err != nil {
 			return "", err
@@ -427,7 +433,7 @@ func (s *IconService) ExportIcon(id string, options ExportOptions) (string, erro
 		if options.Size <= 0 {
 			options.Size = 24
 		}
-		return convertSVGToPNG(svgBytes, safeName, options.Size, tmpDir)
+		return convertSVGToPNG(svgBytes, safeName, options.Size, outDir)
 
 	default:
 		return "", fmt.Errorf("unsupported format: %s", options.Format)
@@ -545,9 +551,9 @@ func (s *IconService) GetStats() map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		"totalIcons":  totalIcons,
-		"packages":    pkgCount,
-		"categories":  totalCategories,
+		"totalIcons": totalIcons,
+		"packages":   pkgCount,
+		"categories": totalCategories,
 	}
 }
 

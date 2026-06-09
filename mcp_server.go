@@ -216,6 +216,10 @@ func (s *MCPServer) handleToolsList(req MCPRequest) MCPResponse {
 						"type":        "string",
 						"description": "Fill color as hex (e.g. '#FF5722'), optional",
 					},
+					"directory": map[string]interface{}{
+						"type":        "string",
+						"description": "Output directory path. If not specified, uses system temp directory.",
+					},
 				},
 				"required": []string{"id"},
 			},
@@ -320,11 +324,13 @@ func (s *MCPServer) toolExportIcon(args map[string]interface{}) []MCPContent {
 	}
 	size := intArg(args, "size", 24)
 	color, _ := args["color"].(string)
+	directory, _ := args["directory"].(string)
 
 	outPath, err := s.iconService.ExportIcon(id, ExportOptions{
-		Format: format,
-		Size:   size,
-		Color:  color,
+		Format:    format,
+		Size:      size,
+		Color:     color,
+		OutputDir: directory,
 	})
 	if err != nil {
 		return []MCPContent{{Type: "text", Text: "Error: " + err.Error()}}
