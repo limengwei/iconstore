@@ -1,10 +1,10 @@
 {
 	"fixed": {
-		"file_version": "1.0.0"
+		"file_version": "1.0.5"
 	},
 	"info": {
 		"0000": {
-			"ProductVersion": "1.0.4",
+			"ProductVersion": "1.0.5",
 			"CompanyName": "MindSpace",
 			"FileDescription": "SVG Icon Search & Download Tool",
 			"LegalCopyright": "(c) 2026 MindSpace",
