@@ -146,7 +146,7 @@ func (s *MCPServer) handleInitialize(req MCPRequest) MCPResponse {
 			},
 			"serverInfo": map[string]interface{}{
 				"name":    "iconstore",
-				"version": "1.0.0",
+				"version": "1.0.4",
 			},
 		},
 	}
