@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -571,9 +570,15 @@ func applySVGColor(svg []byte, color string) []byte {
 	// Replace currentColor with the specified color
 	content = strings.ReplaceAll(content, "currentColor", color)
 
-	// Remove all fill attributes from elements
+	// Remove fill attributes but preserve fill="none" (transparent areas)
+	// Go regexp doesn't support lookahead, so use a placeholder approach
 	re := regexp.MustCompile(` fill="[^"]*"`)
-	content = re.ReplaceAllString(content, "")
+	content = re.ReplaceAllStringFunc(content, func(match string) string {
+		if match == ` fill="none"` {
+			return match
+		}
+		return ""
+	})
 
 	// Add fill to the root <svg> tag
 	svgTagRe := regexp.MustCompile(`(?i)(<svg[^>]*)(>)`)
@@ -601,18 +606,50 @@ func sanitizeFilename(s string) string {
 
 // convertSVGToPNG renders SVG to PNG at the specified pixel size
 func convertSVGToPNG(svgContent []byte, name string, size int, tmpDir string) (string, error) {
-	// Replace relative units (1em, 100%, etc.) with absolute pixel values
-	// so oksvg can parse the dimensions correctly
-	emRe := regexp.MustCompile(` (width|height)="[^"]*"`)
-	svgContent = emRe.ReplaceAll(svgContent, []byte(fmt.Sprintf(` ${1}="%d"`, size)))
+	svgStr := string(svgContent)
 
-	// Parse SVG
-	icon, err := oksvg.ReadIconStream(bytes.NewReader(svgContent))
+	// First parse to get original viewBox
+	icon, err := oksvg.ReadIconStream(strings.NewReader(svgStr))
 	if err != nil {
 		return "", fmt.Errorf("failed to parse SVG: %w", err)
 	}
 
-	// Set target size
+	if icon.ViewBox.W == 0 || icon.ViewBox.H == 0 {
+		icon.ViewBox.W = 24
+		icon.ViewBox.H = 24
+	}
+
+	// Calculate scale factor
+	scale := float64(size) / icon.ViewBox.W
+
+	// Pre-scale stroke-width in the SVG source since oksvg's transform
+	// does not scale stroke width (only coordinates are transformed)
+	if scale != 1.0 {
+		strokeRe := regexp.MustCompile(`stroke-width="([0-9]*\.?[0-9]+)"`)
+		svgStr = strokeRe.ReplaceAllStringFunc(svgStr, func(match string) string {
+			submatches := strokeRe.FindStringSubmatch(match)
+			if len(submatches) < 2 {
+				return match
+			}
+			origWidth := 0.0
+			fmt.Sscanf(submatches[1], "%f", &origWidth)
+			newWidth := origWidth * scale
+			return fmt.Sprintf(`stroke-width="%.2f"`, newWidth)
+		})
+	}
+
+	// Re-parse with scaled stroke-width
+	icon, err = oksvg.ReadIconStream(strings.NewReader(svgStr))
+	if err != nil {
+		return "", fmt.Errorf("failed to parse SVG: %w", err)
+	}
+
+	if icon.ViewBox.W == 0 || icon.ViewBox.H == 0 {
+		icon.ViewBox.W = 24
+		icon.ViewBox.H = 24
+	}
+
+	// SetTarget maps the viewBox to the target rectangle with proper scaling
 	icon.SetTarget(0, 0, float64(size), float64(size))
 
 	// Create rasterizer

@@ -77,6 +77,14 @@ export class ExportOptions {
              */
             this["color"] = "";
         }
+        if (!("outputDir" in $$source)) {
+            /**
+             * output directory, empty means temp dir
+             * @member
+             * @type {string}
+             */
+            this["outputDir"] = "";
+        }
 
         Object.assign(this, $$source);
     }
