@@ -608,6 +608,14 @@ func sanitizeFilename(s string) string {
 func convertSVGToPNG(svgContent []byte, name string, size int, tmpDir string) (string, error) {
 	svgStr := string(svgContent)
 
+	// Replace currentColor with black since oksvg does not support it
+	svgStr = strings.ReplaceAll(svgStr, "currentColor", "#000000")
+
+	// Remove unsupported CSS units from width/height so oksvg can parse them.
+	// oksvg only supports cm, mm, px, pt but not em, rem, %, etc.
+	unitRe := regexp.MustCompile(` (width|height)="([0-9.]*)(em|rem|%|ex|ch|vw|vh|vmin|vmax)"`)
+	svgStr = unitRe.ReplaceAllString(svgStr, "")
+
 	// First parse to get original viewBox
 	icon, err := oksvg.ReadIconStream(strings.NewReader(svgStr))
 	if err != nil {
